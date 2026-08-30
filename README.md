@@ -1,9 +1,17 @@
 # SICA — Sistema Integrado de Control de Acceso
 
+![Java](https://img.shields.io/badge/Java-17-4CAF7D?logo=openjdk&logoColor=white)
+![JavaFX](https://img.shields.io/badge/JavaFX-21-4CAF7D?logo=java&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8-4CAF7D?logo=mysql&logoColor=white)
+![Maven](https://img.shields.io/badge/Maven-3.8+-4CAF7D?logo=apachemaven&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-opcional-4CAF7D?logo=docker&logoColor=white)
+
 Proyecto académico para el Complejo Empresarial **Zona Acme**. Reemplaza el
-registro manual en papel por un sistema en Java (consola) + MySQL con control
+registro manual en papel por un sistema en Java + MySQL con control
 de acceso basado en roles (RBAC), auditoría inmutable y cuatro flujos de
-ingreso distintos.
+ingreso distintos. Incluye dos interfaces: una gráfica en **JavaFX**
+(dashboard verde/blanco) y una de **consola**, ambas sobre la misma capa de
+negocio.
 
 ## 1. Descripción del proyecto
 
@@ -114,6 +122,39 @@ factory/     -> Creación centralizada de repositorios
 decorator/   -> Auditoría transversal
 observer/    -> Notificaciones en tiempo real
 exception/   -> Excepciones de negocio propias
+ui/          -> Interfaz gráfica JavaFX (login, dashboard, diálogos)
+```
+
+### Estructura de carpetas
+
+```
+ProyectoSICA/
+├── db/
+│   ├── schema.sql              # Creación de las 11 tablas
+│   └── data.sql                # Roles, permisos, usuarios y datos de ejemplo
+├── docker-compose.yml          # MySQL 8 listo para desarrollo local
+├── pom.xml
+├── README.md
+└── src/main/
+    ├── java/com/acme/sica/
+    │   ├── App.java             # Entrada de la versión consola
+    │   ├── config/               # Conexión BD (Singleton) + hash de passwords
+    │   ├── model/                 # Entidades: Usuario, Persona, Visita, etc.
+    │   ├── exception/             # Excepciones de negocio propias
+    │   ├── repository/            # Interfaces (puertos)
+    │   │   └── impl/               # Implementaciones JDBC (adaptadores)
+    │   ├── factory/               # RepositoryFactory (Factory Method)
+    │   ├── observer/              # Notificaciones en tiempo real (Observer)
+    │   ├── decorator/             # Auditoría automática (Decorator)
+    │   ├── service/               # Reglas de negocio y RBAC
+    │   │   └── flujos/             # Los 4 escenarios de ingreso (Strategy)
+    │   ├── controller/            # Controladores de consola
+    │   ├── view/                  # Entrada/salida de consola
+    │   └── ui/                    # Interfaz gráfica JavaFX
+    │       ├── MainApp.java        # Punto de entrada gráfico
+    │       ├── Launcher.java       # Lanzador (evita error de módulos JavaFX)
+    │       └── dialogs/            # Un diálogo por cada operación
+    └── resources/css/theme.css   # Tema visual verde suave + blanco
 ```
 
 ### Principios SOLID aplicados
@@ -161,7 +202,27 @@ tema verde suave + blanco:
   negocio, el RBAC y los 5 patrones de diseño no cambiaron, solo la capa de
   presentación.
 
-## 5. Instalación y ejecución
+## 5. Base de datos con Docker
+
+El proyecto incluye `docker-compose.yml` con MySQL 8 ya configurado para
+coincidir con las credenciales por defecto de `ConexionBD.java`
+(`root`/`root`, puerto `3306`, base `sica_db`), y con `schema.sql` +
+`data.sql` montados para cargarse automáticamente la primera vez.
+
+```bash
+# Levantar el contenedor (crea la BD, tablas y datos semilla automáticamente)
+docker compose up -d
+
+# Verificar que quedó arriba y saludable
+docker compose ps
+
+# Ver logs si algo falla
+docker compose logs -f sica_mysql
+```
+
+Con eso, `ConexionBD.java` ya apunta al lugar correcto sin tocar nada más.
+
+## 6. Instalación y ejecución
 
 ### Requisitos
 - JDK 17+
@@ -178,19 +239,24 @@ mysql -u root -p < db/data.sql
 # 2. Configurar credenciales de conexión (si son distintas a root/root)
 #    editar: src/main/java/com/acme/sica/config/ConexionBD.java
 
-# 3a. Ejecutar la versión GRÁFICA (JavaFX) — recomendada
+# 3a. Ejecutar la versión GRÁFICA (JavaFX) — recomendada, más confiable
 mvn clean javafx:run
 
 # 3b. O compilar el jar ejecutable con todo incluido
 mvn clean package
 java -jar target/sica-jar-with-dependencies.jar
 
-# 3c. Si prefieres la versión de consola original:
-#     cambia temporalmente el mainClass en pom.xml a com.acme.sica.App
-#     y ejecuta "mvn clean package && java -jar target/sica-jar-with-dependencies.jar"
+# 3c. Si ejecutas desde el botón "Run" de un IDE (VS Code, IntelliJ, etc.)
+#     NO selecciones MainApp.java como clase a ejecutar — selecciona
+#     Launcher.java (com.acme.sica.ui.Launcher). Es un lanzador que evita el
+#     error "JavaFX runtime components are missing" al ejecutar directamente
+#     una clase que extiende Application.
+
+# 3d. Si prefieres la versión de consola original:
+#     ejecuta la clase com.acme.sica.App (no requiere JavaFX)
 ```
 
-## 6. Guía de uso — credenciales de ejemplo por rol
+## 7. Guía de uso — credenciales de ejemplo por rol
 
 Todas las contraseñas de ejemplo son: **`Acme#2026`**
 
@@ -203,14 +269,23 @@ Todas las contraseñas de ejemplo son: **`Acme#2026`**
 
 ### Flujo de prueba sugerido
 
-1. Inicia sesión como **Guarda** → registra el ingreso del documento
-   `1122334455` (invitado de ejemplo, sin visita pre-aprobada) → el sistema
-   lo deja "Pendiente de Aprobación" y notifica por consola.
-2. Inicia sesión como **Funcionario** → opción "Gestionar aprobaciones" →
-   aprueba la visita.
-3. Vuelve a iniciar sesión como **Guarda** → revisa el reporte "Personas
-   dentro del complejo" (opción 10) para confirmar el check-in.
-4. Explora la opción 13 (bitácora de auditoría) para ver cómo cada acción
-   anterior quedó registrada automáticamente.
-#   P r o y e c t o - S I C A - - - Z o n a - A c m e  
- 
+1. Inicia sesión como **Guarda** (`guarda@acme.com`) → "Registrar ingreso" con
+   el documento `1122334455` (invitado de ejemplo, sin visita pre-aprobada) →
+   el sistema lo deja "Pendiente de Aprobación" y notifica en tiempo real
+   (toast verde en la versión gráfica, mensaje en la versión de consola).
+2. Inicia sesión como **Funcionario** (`funcionario@acme.com`) → "Aprobaciones
+   pendientes" → aprueba la visita.
+3. Vuelve a iniciar sesión como **Guarda** → revisa "Personas dentro del
+   complejo" para confirmar el check-in.
+4. Revisa "Bitácora de auditoría" (rol Superusuario o Supervisor) para ver
+   cómo cada acción anterior quedó registrada automáticamente.
+
+## 8. Solución de problemas comunes
+
+| Síntoma | Causa habitual | Solución |
+|---|---|---|
+| `Credenciales inválidas o usuario inactivo` con las credenciales de ejemplo | El `data.sql` cargado tiene un hash de contraseña desactualizado | Ejecuta el `UPDATE usuarios SET password = ...` con el hash correcto (ver `db/data.sql`), o vuelve a cargar `data.sql` completo |
+| `Error: JavaFX runtime components are missing` | Se ejecutó `MainApp` directamente en vez de `Launcher` | Ejecuta `com.acme.sica.ui.Launcher`, o usa `mvn clean javafx:run` |
+| `Access denied for user` al conectar a MySQL | Usuario/contraseña de `ConexionBD.java` no coinciden con tu MySQL | Ajusta `USUARIO`/`PASSWORD` en `ConexionBD.java` según tu instalación local o contenedor Docker |
+| `Communications link failure` / `Connection refused` | MySQL no está corriendo, o el puerto no es el 3306 | Verifica con `docker compose ps` (si usas Docker) o que el servicio MySQL local esté activo |
+| `Unknown database 'sica_db'` | El esquema tiene otro nombre en tu MySQL | Cambia el nombre en la URL de `ConexionBD.java`, o crea el esquema como `sica_db` |

@@ -1,0 +1,173 @@
+/* ==========================================================================
+   SICA - Tema visual: verde suave + blanco
+   ========================================================================== */
+
+.root {
+    -fx-primary: #4CAF7D;         /* verde principal */
+    -fx-primary-dark: #34795A;    /* verde oscuro para hover/acentos */
+    -fx-primary-light: #E7F5EC;   /* verde muy suave para fondos */
+    -fx-white: #FFFFFF;
+    -fx-text-dark: #1F2D25;
+    -fx-text-muted: #6B8478;
+    -fx-danger: #D96C6C;
+
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-background-color: -fx-white;
+}
+
+/* ---------- Contenedores generales ---------- */
+.pantalla {
+    -fx-background-color: linear-gradient(to bottom, #F3FBF6, #FFFFFF);
+}
+
+.panel-blanco {
+    -fx-background-color: white;
+    -fx-background-radius: 14;
+    -fx-effect: dropshadow(gaussian, rgba(76,175,125,0.18), 14, 0, 0, 4);
+    -fx-padding: 24;
+}
+
+.barra-superior {
+    -fx-background-color: -fx-primary;
+    -fx-padding: 16 24 16 24;
+}
+
+.barra-superior .label {
+    -fx-text-fill: white;
+}
+
+.titulo-app {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.subtitulo-app {
+    -fx-font-size: 12px;
+    -fx-text-fill: #DFF3E7;
+}
+
+/* ---------- Login ---------- */
+.login-titulo {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-primary-dark;
+}
+
+.login-subtitulo {
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+/* ---------- Campos de texto ---------- */
+.text-field, .password-field, .combo-box, .text-area {
+    -fx-background-color: #F5FAF7;
+    -fx-background-radius: 8;
+    -fx-border-color: #CFE9DA;
+    -fx-border-radius: 8;
+    -fx-padding: 8 12 8 12;
+    -fx-font-size: 13px;
+}
+
+.text-field:focused, .password-field:focused, .combo-box:focused {
+    -fx-border-color: -fx-primary;
+}
+
+.campo-etiqueta {
+    -fx-font-size: 12px;
+    -fx-text-fill: -fx-text-muted;
+    -fx-font-weight: bold;
+}
+
+/* ---------- Botones ---------- */
+.boton-primario {
+    -fx-background-color: -fx-primary;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-padding: 10 22 10 22;
+    -fx-cursor: hand;
+}
+.boton-primario:hover {
+    -fx-background-color: -fx-primary-dark;
+}
+
+.boton-secundario {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-primary-dark;
+    -fx-border-color: -fx-primary;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 9 20 9 20;
+    -fx-cursor: hand;
+}
+.boton-secundario:hover {
+    -fx-background-color: -fx-primary-light;
+}
+
+.boton-peligro {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-danger;
+    -fx-border-color: -fx-danger;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 8 16 8 16;
+    -fx-cursor: hand;
+}
+.boton-peligro:hover {
+    -fx-background-color: #FBEAEA;
+}
+
+/* ---------- Tarjetas del dashboard ---------- */
+.tarjeta-boton {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-border-color: -fx-primary-light;
+    -fx-border-width: 2;
+    -fx-border-radius: 16;
+    -fx-padding: 18 14 18 14;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(76,175,125,0.12), 8, 0, 0, 2);
+    -fx-alignment: center;
+}
+.tarjeta-boton:hover {
+    -fx-background-color: -fx-primary-light;
+    -fx-border-color: -fx-primary;
+}
+
+.tarjeta-icono {
+    -fx-font-size: 26px;
+}
+
+.tarjeta-titulo {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-dark;
+    -fx-wrap-text: true;
+    -fx-text-alignment: center;
+}
+
+/* ---------- Secciones / dashboard ---------- */
+.seccion-titulo {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-primary-dark;
+}
+
+.dashboard-fondo {
+    -fx-background-color: #F7FCF9;
+}
+
+.tabla {
+    -fx-background-color: white;
+    -fx-border-color: -fx-primary-light;
+}
+
+.chip-estado {
+    -fx-background-color: -fx-primary-light;
+    -fx-text-fill: -fx-primary-dark;
+    -fx-background-radius: 20;
+    -fx-padding: 4 12 4 12;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
