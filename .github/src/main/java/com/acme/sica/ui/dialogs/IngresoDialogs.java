@@ -21,11 +21,9 @@ public final class IngresoDialogs {
         Dialog<Void> dialog = DialogoBase.crear("Registrar ingreso");
 
         TextField documento = new TextField();
-        documento.setPromptText("Documento de identidad (máx. 10 dígitos)");
-        UiUtil.restringirSoloDigitos(documento, 10);
+        documento.setPromptText("Documento de identidad");
         TextField placa = new TextField();
-        placa.setPromptText("Ej. GTL251 (carro) o HGK20H (moto)");
-        UiUtil.restringirComoPlaca(placa, 7);
+        placa.setPromptText("Placa (opcional)");
 
         VBox contenido = new VBox(16,
                 UiUtil.campoConEtiqueta("Documento de identidad", documento),
@@ -101,7 +99,6 @@ public final class IngresoDialogs {
         contenidoSeleccion.setPadding(new Insets(24));
         seleccion.getDialogPane().setContent(contenidoSeleccion);
         seleccion.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-        UiUtil.animarBotonesDialogo(seleccion.getDialogPane());
         seleccion.setResultConverter(boton -> boton == ButtonType.OK ? empresaCombo.getValue() : null);
 
         Optional<Empresa> empresaElegida = seleccion.showAndWait();
@@ -134,7 +131,6 @@ public final class IngresoDialogs {
         ButtonType aprobarTipo = new ButtonType("Aprobar");
         ButtonType rechazarTipo = new ButtonType("Rechazar");
         dialog.getDialogPane().getButtonTypes().addAll(aprobarTipo, rechazarTipo, ButtonType.CANCEL);
-        UiUtil.animarBotonesDialogo(dialog.getDialogPane());
 
         dialog.setResultConverter(boton -> {
             Visita seleccionada = lista.getSelectionModel().getSelectedItem();

@@ -25,8 +25,7 @@ public final class PersonaDialogs {
         TextField nombre = new TextField();
         nombre.setPromptText("Nombre completo");
         TextField documento = new TextField();
-        documento.setPromptText("Documento de identidad (máx. 10 dígitos)");
-        UiUtil.restringirSoloDigitos(documento, 10);
+        documento.setPromptText("Documento de identidad");
 
         ComboBox<TipoPersona> tipo = new ComboBox<>();
         tipo.getItems().addAll(TipoPersona.values());

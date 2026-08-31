@@ -5,7 +5,6 @@ import com.acme.sica.model.*;
 import com.acme.sica.repository.AuditoriaRepository;
 import com.acme.sica.repository.EstadoRepository;
 import com.acme.sica.repository.PersonaRepository;
-import com.acme.sica.util.Validaciones;
 
 public class PersonaService {
 
@@ -25,7 +24,6 @@ public class PersonaService {
     public Persona registrarPersona(Usuario operador, String nombre, String documento, Empresa empresa,
                                      TipoPersona tipo, String urlFoto) {
         autorizacionService.verificarPermiso(operador, "crear_persona");
-        Validaciones.validarCedula(documento);
 
         EstadoAcceso activo = estadoRepository.buscarEstadoAccesoPorNombre("Activo")
                 .orElseThrow(() -> new IllegalStateException("Estado 'Activo' no configurado"));

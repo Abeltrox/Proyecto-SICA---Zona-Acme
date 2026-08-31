@@ -50,6 +50,40 @@ public final class UiUtil {
         return box;
     }
 
+    // ---------------- Restricciones de formato en campos de texto ----------------
+
+    /**
+     * Restringe un TextField a solo dígitos, con un máximo de caracteres.
+     * El usuario no puede ni siquiera teclear una letra o superar el límite;
+     * es la primera línea de defensa (además, PersonaService valida de nuevo
+     * la cédula igual, por si el dato llega por otra vía como la consola).
+     */
+    public static void restringirSoloDigitos(TextField campo, int maxCaracteres) {
+        campo.setTextFormatter(new TextFormatter<>(cambio -> {
+            String textoResultante = cambio.getControlNewText();
+            if (textoResultante.isEmpty()) return cambio;
+            if (textoResultante.length() <= maxCaracteres && textoResultante.matches("\\d*")) return cambio;
+            return null;
+        }));
+    }
+
+    /**
+     * Restringe un TextField de placa de vehículo: solo letras, dígitos y
+     * espacio, máximo de caracteres, y convierte a mayúsculas mientras se
+     * escribe. El formato exacto (AAA123 / AAA12A) lo valida
+     * Validaciones.normalizarYValidarPlaca() en AccesoService al guardar,
+     * ya que ese chequeo necesita ver la palabra completa, no cada tecla.
+     */
+    public static void restringirComoPlaca(TextField campo, int maxCaracteres) {
+        campo.setTextFormatter(new TextFormatter<>(cambio -> {
+            String textoResultante = cambio.getControlNewText();
+            if (textoResultante.length() > maxCaracteres) return null;
+            if (!textoResultante.toUpperCase().matches("[A-Z0-9 ]*")) return null;
+            cambio.setText(cambio.getText().toUpperCase());
+            return cambio;
+        }));
+    }
+
     public static void mostrarExito(String titulo, String mensaje) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(titulo);

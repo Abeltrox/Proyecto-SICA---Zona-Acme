@@ -10,7 +10,6 @@ import com.acme.sica.service.flujos.FlujoAcceso;
 import com.acme.sica.service.flujos.FlujoCarnetOlvidado;
 import com.acme.sica.service.flujos.FlujoInvitadoNoAnunciado;
 import com.acme.sica.service.flujos.FlujoInvitadoPreregistrado;
-import com.acme.sica.util.Validaciones;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -45,7 +44,6 @@ public class AccesoService implements AccesoServiceI {
     @Override
     public Visita registrarIngreso(String documentoIdentidad, Usuario operador, String vehiculoPlaca) {
         autorizacionService.verificarPermiso(operador, "registrar_visita");
-        String placaNormalizada = Validaciones.normalizarYValidarPlaca(vehiculoPlaca);
 
         Persona persona = personaRepository.buscarPorDocumento(documentoIdentidad)
                 .orElseThrow(() -> new EntidadNoEncontradaException("Persona", documentoIdentidad));
@@ -61,7 +59,7 @@ public class AccesoService implements AccesoServiceI {
         regularizarSalidaOlvidadaSiAplica(persona);
 
         FlujoAcceso flujo = seleccionarFlujo(persona);
-        return flujo.procesarIngreso(persona, operador, placaNormalizada);
+        return flujo.procesarIngreso(persona, operador, vehiculoPlaca);
     }
 
     /** Selecciona la estrategia (Strategy) correcta según el estado y tipo de la persona. */
