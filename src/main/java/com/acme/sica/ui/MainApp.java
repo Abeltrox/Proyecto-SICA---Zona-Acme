@@ -10,6 +10,7 @@ import com.acme.sica.service.*;
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 /**
@@ -58,7 +59,11 @@ public class MainApp extends Application {
         stage.setTitle("SICA - Zona Acme");
         stage.setMinWidth(980);
         stage.setMinHeight(680);
+        stage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo_zona_acme.png")));
         mostrarLogin();
+        // Arranca maximizada para aprovechar toda la pantalla (p. ej. 1920x1080):
+        // así las tarjetas del dashboard quedan lo más grandes posible sin desbordar.
+        stage.setMaximized(true);
         stage.show();
     }
 

@@ -2,12 +2,15 @@ package com.acme.sica.ui;
 
 import com.acme.sica.exception.AccesoDenegadoException;
 import com.acme.sica.model.Usuario;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
@@ -21,8 +24,12 @@ public class LoginView {
     }
 
     public Parent construir() {
-        Label titulo = new Label("SICA");
-        titulo.getStyleClass().add("login-titulo");
+        ImageView logo = new ImageView(new Image(
+                getClass().getResourceAsStream("/images/logo_zona_acme.png")));
+        logo.setFitWidth(420);
+        logo.setPreserveRatio(true);
+        StackPane logoCentrado = new StackPane(logo);
+        logoCentrado.setMaxWidth(Double.MAX_VALUE);
 
         Label subtitulo = new Label("Sistema Integrado de Control de Acceso · Zona Acme");
         subtitulo.getStyleClass().add("login-subtitulo");
@@ -42,7 +49,7 @@ public class LoginView {
         password.setOnAction(e -> intentarLogin(email.getText(), password.getText(), mensajeError));
 
         VBox formulario = new VBox(14,
-                titulo, subtitulo,
+                logoCentrado, subtitulo,
                 new javafx.scene.layout.Region() {{ setPrefHeight(10); }},
                 UiUtil.campoConEtiqueta("Correo electrónico", email),
                 UiUtil.campoConEtiqueta("Contraseña", password),
@@ -55,7 +62,7 @@ public class LoginView {
         formulario.getStyleClass().add("panel-blanco");
 
         StackPane contenedor = new StackPane(formulario);
-        contenedor.getStyleClass().add("pantalla");
+        contenedor.getStyleClass().addAll("pantalla", "pantalla-login");
         contenedor.setPadding(new Insets(40));
         return contenedor;
     }

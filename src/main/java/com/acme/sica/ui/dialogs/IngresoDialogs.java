@@ -1,5 +1,6 @@
 package com.acme.sica.ui.dialogs;
 
+import com.acme.sica.model.Empresa;
 import com.acme.sica.model.Usuario;
 import com.acme.sica.model.Visita;
 import com.acme.sica.ui.MainApp;
@@ -24,10 +25,10 @@ public final class IngresoDialogs {
         TextField placa = new TextField();
         placa.setPromptText("Placa (opcional)");
 
-        VBox contenido = new VBox(12,
+        VBox contenido = new VBox(16,
                 UiUtil.campoConEtiqueta("Documento de identidad", documento),
                 UiUtil.campoConEtiqueta("Placa de vehículo (opcional)", placa));
-        contenido.setPadding(new Insets(6));
+        contenido.setPadding(new Insets(24));
         dialog.getDialogPane().setContent(contenido);
 
         DialogoBase.agregarBotones(dialog, "Registrar", () -> {
@@ -41,47 +42,73 @@ public final class IngresoDialogs {
         dialog.showAndWait();
     }
 
+    /** El operador elige de una lista quién sale (todas las visitas actualmente "Dentro"), sin escribir ningún ID. */
     public static void registrarSalida(MainApp app) {
+        List<Visita> abiertas = app.getVisitaRepository().listarTodas().stream()
+                .filter(Visita::estaAbierta)
+                .toList();
+
+        if (abiertas.isEmpty()) {
+            UiUtil.mostrarExito("Nadie dentro", "En este momento no hay personas registradas dentro del complejo.");
+            return;
+        }
+
         Dialog<Void> dialog = DialogoBase.crear("Registrar salida");
 
-        TextField visitaId = new TextField();
-        visitaId.setPromptText("ID de la visita");
+        ComboBox<Visita> visita = new ComboBox<>();
+        visita.getItems().addAll(abiertas);
+        visita.setPromptText("Selecciona quién sale");
+        visita.setMaxWidth(Double.MAX_VALUE);
+        visita.setCellFactory(lv -> new ListCell<>() {
+            @Override protected void updateItem(Visita v, boolean empty) {
+                super.updateItem(v, empty);
+                setText(empty || v == null ? null : v.getPersona().getNombre() + " — entró " + v.getFechaEntrada());
+            }
+        });
+        visita.setButtonCell(visita.getCellFactory().call(null));
 
-        VBox contenido = new VBox(12, UiUtil.campoConEtiqueta("ID de la visita", visitaId));
-        contenido.setPadding(new Insets(6));
+        VBox contenido = new VBox(16, UiUtil.campoConEtiqueta("Persona que sale", visita));
+        contenido.setPadding(new Insets(24));
         dialog.getDialogPane().setContent(contenido);
 
         DialogoBase.agregarBotones(dialog, "Registrar salida", () -> {
-            int id = Integer.parseInt(visitaId.getText().trim());
-            Visita visita = app.getAccesoService().registrarSalida(id, app.getSesionActual());
-            UiUtil.mostrarExito("Salida registrada", visita.getPersona().getNombre() + " ha salido del complejo.");
+            Visita seleccionada = visita.getValue();
+            if (seleccionada == null) throw new IllegalArgumentException("Selecciona una persona de la lista.");
+            Visita v = app.getAccesoService().registrarSalida(seleccionada.getId(), app.getSesionActual());
+            UiUtil.mostrarExito("Salida registrada", v.getPersona().getNombre() + " ha salido del complejo.");
         });
 
         dialog.showAndWait();
     }
 
+    /** El operador elige la empresa de un desplegable (no escribe el ID) y luego elige la visita de una lista. */
     public static void gestionarAprobaciones(MainApp app) {
-        TextInputDialog pedirEmpresa = new TextInputDialog();
-        pedirEmpresa.setTitle("Aprobaciones pendientes");
-        pedirEmpresa.setHeaderText(null);
-        pedirEmpresa.setContentText("ID de tu empresa (para filtrar pendientes):");
-        pedirEmpresa.getDialogPane().getStylesheets().add(
-                IngresoDialogs.class.getResource("/css/theme.css").toExternalForm());
-
-        Optional<String> resultado = pedirEmpresa.showAndWait();
-        if (resultado.isEmpty() || resultado.get().isBlank()) return;
-
-        int empresaId;
-        try {
-            empresaId = Integer.parseInt(resultado.get().trim());
-        } catch (NumberFormatException e) {
-            UiUtil.mostrarError("El ID de empresa debe ser un número.");
+        List<Empresa> empresas = app.getEmpresaRepository().listarTodas();
+        if (empresas.isEmpty()) {
+            UiUtil.mostrarExito("Sin empresas", "Todavía no hay empresas registradas en el sistema.");
             return;
         }
 
-        List<Visita> pendientes = app.getVisitaRepository().listarPendientesPorFuncionario(empresaId);
+        ComboBox<Empresa> empresaCombo = new ComboBox<>();
+        empresaCombo.getItems().addAll(empresas);
+        empresaCombo.setPromptText("Selecciona una empresa");
+        empresaCombo.setMaxWidth(Double.MAX_VALUE);
+
+        Dialog<Empresa> seleccion = DialogoBase.crear("Aprobaciones pendientes");
+        VBox contenidoSeleccion = new VBox(16, UiUtil.campoConEtiqueta("Empresa", empresaCombo));
+        contenidoSeleccion.setPadding(new Insets(24));
+        seleccion.getDialogPane().setContent(contenidoSeleccion);
+        seleccion.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        UiUtil.animarBotonesDialogo(seleccion.getDialogPane());
+        seleccion.setResultConverter(boton -> boton == ButtonType.OK ? empresaCombo.getValue() : null);
+
+        Optional<Empresa> empresaElegida = seleccion.showAndWait();
+        if (empresaElegida.isEmpty()) return;
+
+        List<Visita> pendientes = app.getVisitaRepository().listarPendientesPorFuncionario(empresaElegida.get().getId());
         if (pendientes.isEmpty()) {
-            UiUtil.mostrarExito("Sin pendientes", "No hay visitas pendientes de aprobación para esa empresa.");
+            UiUtil.mostrarExito("Sin pendientes",
+                    "No hay visitas pendientes de aprobación para " + empresaElegida.get().getNombre() + ".");
             return;
         }
 
@@ -91,20 +118,21 @@ public final class IngresoDialogs {
             @Override
             protected void updateItem(Visita v, boolean empty) {
                 super.updateItem(v, empty);
-                setText(empty || v == null ? null : v.getId() + " — " + v.getPersona()
-                        + " (llegó " + v.getFechaEntrada() + ")");
+                setText(empty || v == null ? null : v.getPersona()
+                        + " — llegó " + v.getFechaEntrada());
             }
         });
-        lista.setPrefHeight(220);
+        lista.setPrefHeight(240);
 
-        Dialog<Void> dialog = DialogoBase.crear("Visitas pendientes de aprobación");
-        VBox contenido = new VBox(10, new Label("Selecciona una visita y decide:"), lista);
-        contenido.setPadding(new Insets(6));
+        Dialog<Void> dialog = DialogoBase.crear("Pendientes — " + empresaElegida.get().getNombre());
+        VBox contenido = new VBox(14, new Label("Selecciona una visita y decide:"), lista);
+        contenido.setPadding(new Insets(24));
         dialog.getDialogPane().setContent(contenido);
 
         ButtonType aprobarTipo = new ButtonType("Aprobar");
         ButtonType rechazarTipo = new ButtonType("Rechazar");
         dialog.getDialogPane().getButtonTypes().addAll(aprobarTipo, rechazarTipo, ButtonType.CANCEL);
+        UiUtil.animarBotonesDialogo(dialog.getDialogPane());
 
         dialog.setResultConverter(boton -> {
             Visita seleccionada = lista.getSelectionModel().getSelectedItem();
