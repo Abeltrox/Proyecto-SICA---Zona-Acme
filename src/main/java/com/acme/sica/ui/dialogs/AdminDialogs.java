@@ -3,15 +3,19 @@ package com.acme.sica.ui.dialogs;
 import com.acme.sica.model.Empresa;
 import com.acme.sica.model.Rol;
 import com.acme.sica.model.Usuario;
+import com.acme.sica.model.Visita;
 import com.acme.sica.ui.MainApp;
 import com.acme.sica.ui.UiUtil;
 import javafx.geometry.Insets;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+
+import java.util.List;
 
 public final class AdminDialogs {
 
@@ -32,13 +36,14 @@ public final class AdminDialogs {
         rol.getItems().setAll(new Rol(1, "Superusuario"), new Rol(2, "Supervisor de Seguridad"),
                 new Rol(3, "Guarda de Seguridad"), new Rol(4, "Funcionario de Empresa"));
         rol.setValue(rol.getItems().get(2));
+        rol.setMaxWidth(Double.MAX_VALUE);
 
-        VBox contenido = new VBox(12,
+        VBox contenido = new VBox(16,
                 UiUtil.campoConEtiqueta("Nombre completo", nombre),
                 UiUtil.campoConEtiqueta("Correo electrónico", email),
                 UiUtil.campoConEtiqueta("Contraseña temporal", password),
                 UiUtil.campoConEtiqueta("Rol", rol));
-        contenido.setPadding(new Insets(6));
+        contenido.setPadding(new Insets(24));
         dialog.getDialogPane().setContent(contenido);
 
         DialogoBase.agregarBotones(dialog, "Crear usuario", () -> {
@@ -58,10 +63,10 @@ public final class AdminDialogs {
         TextField contacto = new TextField();
         contacto.setPromptText("Contacto principal");
 
-        VBox contenido = new VBox(12,
+        VBox contenido = new VBox(16,
                 UiUtil.campoConEtiqueta("Nombre de la empresa", nombre),
                 UiUtil.campoConEtiqueta("Contacto principal", contacto));
-        contenido.setPadding(new Insets(6));
+        contenido.setPadding(new Insets(24));
         dialog.getDialogPane().setContent(contenido);
 
         DialogoBase.agregarBotones(dialog, "Registrar", () -> {
@@ -73,23 +78,35 @@ public final class AdminDialogs {
         dialog.showAndWait();
     }
 
+    /** La visita relacionada (opcional) se elige de un desplegable en vez de escribir su ID. */
     public static void reportarIncidente(MainApp app) {
         Dialog<Void> dialog = DialogoBase.crear("Reportar incidente");
 
-        TextField visitaId = new TextField();
-        visitaId.setPromptText("ID de visita relacionada (opcional)");
+        List<Visita> visitas = app.getVisitaRepository().listarTodas();
+        ComboBox<Visita> visita = new ComboBox<>();
+        visita.getItems().addAll(visitas);
+        visita.setPromptText("Ninguna (opcional)");
+        visita.setMaxWidth(Double.MAX_VALUE);
+        visita.setCellFactory(lv -> new ListCell<>() {
+            @Override protected void updateItem(Visita v, boolean empty) {
+                super.updateItem(v, empty);
+                setText(empty || v == null ? null : v.getPersona().getNombre() + " — " + v.getEstadoVisita());
+            }
+        });
+        visita.setButtonCell(visita.getCellFactory().call(null));
+
         TextArea descripcion = new TextArea();
         descripcion.setPromptText("Describe lo ocurrido...");
         descripcion.setPrefRowCount(4);
 
-        VBox contenido = new VBox(12,
-                UiUtil.campoConEtiqueta("ID de visita relacionada (opcional)", visitaId),
+        VBox contenido = new VBox(16,
+                UiUtil.campoConEtiqueta("Visita relacionada (opcional)", visita),
                 UiUtil.campoConEtiqueta("Descripción del incidente", descripcion));
-        contenido.setPadding(new Insets(6));
+        contenido.setPadding(new Insets(24));
         dialog.getDialogPane().setContent(contenido);
 
         DialogoBase.agregarBotones(dialog, "Reportar", () -> {
-            Integer id = visitaId.getText().isBlank() ? null : Integer.parseInt(visitaId.getText().trim());
+            Integer id = visita.getValue() == null ? null : visita.getValue().getId();
             app.getIncidenteService().reportarIncidente(app.getSesionActual(), id, descripcion.getText().trim());
             UiUtil.mostrarExito("Incidente registrado", "El incidente quedó registrado en la bitácora.");
         });

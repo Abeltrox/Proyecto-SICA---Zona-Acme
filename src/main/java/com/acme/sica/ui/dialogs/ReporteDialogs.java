@@ -62,14 +62,13 @@ public final class ReporteDialogs {
     }
 
     private static void mostrarVentanaLista(String titulo, ListView<?> lista) {
-        lista.setPrefSize(520, 360);
+        lista.setPrefSize(560, 380);
         Dialog<Void> dialog = DialogoBase.crear(titulo);
-        Label encabezado = new Label(titulo);
-        encabezado.getStyleClass().add("seccion-titulo");
-        VBox contenido = new VBox(12, encabezado, lista);
-        contenido.setPadding(new Insets(6));
+        VBox contenido = new VBox(14, lista);
+        contenido.setPadding(new Insets(24));
         dialog.getDialogPane().setContent(contenido);
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        UiUtil.animarBotonesDialogo(dialog.getDialogPane());
         dialog.showAndWait();
     }
 }

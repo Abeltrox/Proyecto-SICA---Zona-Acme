@@ -12,12 +12,18 @@ import java.sql.SQLException;
  *
  * SOLID - SRP: esta clase tiene una única responsabilidad, gestionar el ciclo de
  * vida de la conexión JDBC. No sabe nada de SQL de negocio.
+ *
+ * Las credenciales se leen de variables de entorno (DB_URL/DB_USER/DB_PASSWORD)
+ * con valores por defecto que coinciden con docker-compose.yml (root/root),
+ * para que el proyecto funcione "out of the box" con Docker sin hardcodear
+ * contraseñas en el código. Si tu MySQL local usa otras credenciales, definí
+ * esas variables de entorno en vez de editar este archivo.
  */
 public class ConexionBD {
 
-    private static final String URL = "jdbc:mysql://localhost:3306/sica_db?useSSL=false&serverTimezone=UTC";
-    private static final String USUARIO = "root";
-    private static final String PASSWORD = "292620";
+    private static final String URL = obtener("DB_URL", "jdbc:mysql://localhost:3306/sica_db?useSSL=false&serverTimezone=UTC");
+    private static final String USUARIO = obtener("DB_USER", "root");
+    private static final String PASSWORD = obtener("DB_PASSWORD", "root");
 
     private static ConexionBD instancia;
     private Connection conexion;
@@ -29,6 +35,11 @@ public class ConexionBD {
         } catch (ClassNotFoundException | SQLException e) {
             throw new RuntimeException("No fue posible conectar a la base de datos sica_db", e);
         }
+    }
+
+    private static String obtener(String variableEntorno, String porDefecto) {
+        String valor = System.getenv(variableEntorno);
+        return (valor == null || valor.isBlank()) ? porDefecto : valor;
     }
 
     public static synchronized ConexionBD getInstancia() {

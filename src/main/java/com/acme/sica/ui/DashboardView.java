@@ -9,7 +9,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.*;
 
 import java.util.ArrayList;
@@ -18,9 +17,12 @@ import java.util.List;
 /**
  * Dashboard principal: barra superior con la sesión activa, y una grilla de
  * tarjetas tipo "cards" (similar a un panel de mando) con las opciones
- * disponibles. Cada tarjeta solo aparece si el rol del usuario tiene el
- * permiso RBAC correspondiente — el dashboard nunca muestra una opción que
- * el backend igual rechazaría.
+ * disponibles. La grilla usa columnas y filas en porcentaje (GridPane), así
+ * las tarjetas siempre se reparten TODO el espacio disponible de la ventana
+ * —grandes en una pantalla completa/maximizada— sin desbordarse nunca, sin
+ * importar cuántas tarjetas tenga el rol de la sesión. Cada tarjeta solo
+ * aparece si el rol del usuario tiene el permiso RBAC correspondiente — el
+ * dashboard nunca muestra una opción que el backend igual rechazaría.
  */
 public class DashboardView {
 
@@ -63,20 +65,42 @@ public class DashboardView {
     }
 
     private Parent construirGrillaOpciones() {
-        FlowPane grilla = new FlowPane();
-        grilla.setHgap(18);
-        grilla.setVgap(18);
-        grilla.setPadding(new Insets(28));
-        grilla.setPrefWrapLength(1000);
+        List<Tarjeta> tarjetas = opcionesDisponibles();
+        int total = Math.max(1, tarjetas.size());
 
-        for (Tarjeta t : opcionesDisponibles()) {
-            grilla.getChildren().add(crearTarjeta(t));
+        // Columnas/filas calculadas según cuántas opciones tenga el rol, para
+        // que la grilla siempre reparta el 100% del ancho y alto disponibles
+        // (nunca scroll, nunca desborde) y las tarjetas queden lo más grandes
+        // posible en pantallas anchas como 1920x1080.
+        int columnas = total <= 3 ? total : (total <= 8 ? 4 : 5);
+        int filas = (int) Math.ceil((double) total / columnas);
+
+        GridPane grilla = new GridPane();
+        grilla.setHgap(26);
+        grilla.setVgap(26);
+        grilla.setPadding(new Insets(34));
+
+        for (int c = 0; c < columnas; c++) {
+            ColumnConstraints cc = new ColumnConstraints();
+            cc.setPercentWidth(100.0 / columnas);
+            cc.setHgrow(Priority.ALWAYS);
+            grilla.getColumnConstraints().add(cc);
+        }
+        for (int f = 0; f < filas; f++) {
+            RowConstraints rc = new RowConstraints();
+            rc.setPercentHeight(100.0 / filas);
+            rc.setVgrow(Priority.ALWAYS);
+            grilla.getRowConstraints().add(rc);
         }
 
-        ScrollPane scroll = new ScrollPane(grilla);
-        scroll.setFitToWidth(true);
-        scroll.setStyle("-fx-background-color: transparent;");
-        return scroll;
+        for (int i = 0; i < tarjetas.size(); i++) {
+            VBox caja = crearTarjeta(tarjetas.get(i));
+            grilla.add(caja, i % columnas, i / columnas);
+        }
+
+        grilla.setMaxWidth(Double.MAX_VALUE);
+        grilla.setMaxHeight(Double.MAX_VALUE);
+        return grilla;
     }
 
     private List<Tarjeta> opcionesDisponibles() {
@@ -118,13 +142,17 @@ public class DashboardView {
         Label titulo = new Label(t.titulo);
         titulo.getStyleClass().add("tarjeta-titulo");
         titulo.setWrapText(true);
-        titulo.setMaxWidth(140);
+        titulo.setMaxWidth(260);
 
-        VBox caja = new VBox(10, icono, titulo);
+        VBox caja = new VBox(16, icono, titulo);
         caja.setAlignment(Pos.CENTER);
-        caja.setPrefSize(160, 120);
+        caja.setMaxWidth(Double.MAX_VALUE);
+        caja.setMaxHeight(Double.MAX_VALUE);
         caja.getStyleClass().add("tarjeta-boton");
         caja.setOnMouseClicked(e -> t.accion.ejecutar());
+        // Animación al pasar el cursor (crece suavemente) y al hacer clic
+        // (sobresale con un pequeño pulso antes de asentarse).
+        UiUtil.animarInteraccion(caja, 1.05, 1.11);
         return caja;
     }
 
