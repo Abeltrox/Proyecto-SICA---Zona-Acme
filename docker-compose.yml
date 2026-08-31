@@ -1,0 +1,24 @@
+services:
+  sica_mysql:
+    image: mysql:8.0
+    container_name: sica_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: sica_db
+    ports:
+      - "3306:3306"
+    volumes:
+      # Se ejecutan en orden alfabético en el primer arranque del contenedor:
+      # schema.sql crea las 11 tablas, data.sql las puebla con roles/permisos/usuarios de ejemplo.
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/1_schema.sql:ro
+      - ./db/data.sql:/docker-entrypoint-initdb.d/2_data.sql:ro
+      - sica_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  sica_mysql_data:

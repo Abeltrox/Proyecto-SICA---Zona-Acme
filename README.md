@@ -236,8 +236,13 @@ Con eso, `ConexionBD.java` ya apunta al lugar correcto sin tocar nada más.
 mysql -u root -p < db/schema.sql
 mysql -u root -p < db/data.sql
 
-# 2. Configurar credenciales de conexión (si son distintas a root/root)
-#    editar: src/main/java/com/acme/sica/config/ConexionBD.java
+# 2. Configurar credenciales de conexión (si tu MySQL local no es root/root)
+#    definí las variables de entorno DB_URL / DB_USER / DB_PASSWORD antes de
+#    ejecutar, por ejemplo (Windows PowerShell):
+#      $env:DB_PASSWORD = "tu_password_local"
+#    o en Linux/Mac:
+#      export DB_PASSWORD=tu_password_local
+#    Si no se definen, se usan los valores por defecto (root/root, sica_db).
 
 # 3a. Ejecutar la versión GRÁFICA (JavaFX) — recomendada, más confiable
 mvn clean javafx:run
@@ -286,6 +291,6 @@ Todas las contraseñas de ejemplo son: **`Acme#2026`**
 |---|---|---|
 | `Credenciales inválidas o usuario inactivo` con las credenciales de ejemplo | El `data.sql` cargado tiene un hash de contraseña desactualizado | Ejecuta el `UPDATE usuarios SET password = ...` con el hash correcto (ver `db/data.sql`), o vuelve a cargar `data.sql` completo |
 | `Error: JavaFX runtime components are missing` | Se ejecutó `MainApp` directamente en vez de `Launcher` | Ejecuta `com.acme.sica.ui.Launcher`, o usa `mvn clean javafx:run` |
-| `Access denied for user` al conectar a MySQL | Usuario/contraseña de `ConexionBD.java` no coinciden con tu MySQL | Ajusta `USUARIO`/`PASSWORD` en `ConexionBD.java` según tu instalación local o contenedor Docker |
+| `Access denied for user` al conectar a MySQL | Las credenciales por defecto (`root`/`root`) no coinciden con tu MySQL | Definí las variables de entorno `DB_USER`/`DB_PASSWORD` con tus credenciales reales antes de ejecutar (ver sección 6, paso 2) |
 | `Communications link failure` / `Connection refused` | MySQL no está corriendo, o el puerto no es el 3306 | Verifica con `docker compose ps` (si usas Docker) o que el servicio MySQL local esté activo |
-| `Unknown database 'sica_db'` | El esquema tiene otro nombre en tu MySQL | Cambia el nombre en la URL de `ConexionBD.java`, o crea el esquema como `sica_db` |
+| `Unknown database 'sica_db'` | El esquema tiene otro nombre en tu MySQL | Definí la variable de entorno `DB_URL` apuntando al nombre correcto, o creá el esquema como `sica_db` |
