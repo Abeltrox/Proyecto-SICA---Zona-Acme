@@ -1,0 +1,274 @@
+/* ==========================================================================
+   SICA - Tema visual: verde suave + blanco
+   ========================================================================== */
+
+.root {
+    -fx-primary: #4CAF7D;         /* verde principal */
+    -fx-primary-dark: #34795A;    /* verde oscuro para hover/acentos */
+    -fx-primary-light: #E7F5EC;   /* verde muy suave para fondos */
+    -fx-white: #FFFFFF;
+    -fx-text-dark: #1F2D25;
+    -fx-text-muted: #6B8478;
+    -fx-danger: #D96C6C;
+
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-background-color: -fx-white;
+}
+
+/* ---------- Contenedores generales ---------- */
+.pantalla {
+    -fx-background-color: linear-gradient(to bottom, #F3FBF6, #FFFFFF);
+}
+
+/* Fondo con imagen (skyline) para la pantalla de login: PNG transparente,
+   se ajusta ("cover") al tamaño de la ventana para que sea responsivo. */
+.pantalla-login {
+    -fx-background-color: linear-gradient(to bottom, #F3FBF6, #FFFFFF);
+    -fx-background-image: url("../images/wallpaper_zona_acme.png");
+    -fx-background-position: center bottom;
+    -fx-background-repeat: no-repeat;
+    -fx-background-size: cover;
+}
+
+.panel-blanco {
+    -fx-background-color: white;
+    -fx-background-radius: 14;
+    -fx-effect: dropshadow(gaussian, rgba(76,175,125,0.18), 14, 0, 0, 4);
+    -fx-padding: 24;
+}
+
+.barra-superior {
+    -fx-background-color: -fx-primary;
+    -fx-padding: 16 24 16 24;
+}
+
+.barra-superior .label {
+    -fx-text-fill: white;
+}
+
+.titulo-app {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.subtitulo-app {
+    -fx-font-size: 12px;
+    -fx-text-fill: #DFF3E7;
+}
+
+/* ---------- Login ---------- */
+.login-titulo {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-primary-dark;
+}
+
+.login-subtitulo {
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+/* ---------- Campos de texto ---------- */
+.text-field, .password-field, .combo-box, .text-area {
+    -fx-background-color: #F5FAF7;
+    -fx-background-radius: 10;
+    -fx-border-color: #CFE9DA;
+    -fx-border-radius: 10;
+    -fx-padding: 10 14 10 14;
+    -fx-font-size: 14px;
+}
+
+.text-field:focused, .password-field:focused, .combo-box:focused {
+    -fx-border-color: -fx-primary;
+}
+
+.combo-box .list-cell {
+    -fx-padding: 6 10 6 10;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: -fx-primary-light;
+    -fx-border-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(31,45,37,0.22), 16, 0, 0, 6);
+}
+
+.combo-box-popup .list-view .list-cell:filled:hover {
+    -fx-background-color: -fx-primary-light;
+    -fx-text-fill: -fx-primary-dark;
+}
+
+.combo-box-popup .list-view .list-cell:filled:selected {
+    -fx-background-color: -fx-primary;
+    -fx-text-fill: white;
+}
+
+.campo-etiqueta {
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-text-muted;
+    -fx-font-weight: bold;
+}
+
+/* ---------- Botones ---------- */
+.boton-primario {
+    -fx-background-color: -fx-primary;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-padding: 10 22 10 22;
+    -fx-cursor: hand;
+}
+.boton-primario:hover {
+    -fx-background-color: -fx-primary-dark;
+}
+
+.boton-secundario {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-primary-dark;
+    -fx-border-color: -fx-primary;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 9 20 9 20;
+    -fx-cursor: hand;
+}
+.boton-secundario:hover {
+    -fx-background-color: -fx-primary-light;
+}
+
+.boton-peligro {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-danger;
+    -fx-border-color: -fx-danger;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 8 16 8 16;
+    -fx-cursor: hand;
+}
+.boton-peligro:hover {
+    -fx-background-color: #FBEAEA;
+}
+
+/* ---------- Tarjetas del dashboard ---------- */
+.tarjeta-boton {
+    -fx-background-color: white;
+    -fx-background-radius: 26;
+    -fx-border-color: -fx-primary-light;
+    -fx-border-width: 2.5;
+    -fx-border-radius: 26;
+    -fx-padding: 20;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(76,175,125,0.16), 16, 0, 0, 5);
+    -fx-alignment: center;
+}
+.tarjeta-boton:hover {
+    -fx-background-color: -fx-primary-light;
+    -fx-border-color: -fx-primary;
+    -fx-effect: dropshadow(gaussian, rgba(76,175,125,0.32), 22, 0, 0, 8);
+}
+.tarjeta-boton:pressed {
+    -fx-background-color: derive(-fx-primary-light, -8%);
+}
+
+.tarjeta-icono {
+    -fx-font-size: 52px;
+}
+
+.tarjeta-titulo {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-dark;
+    -fx-wrap-text: true;
+    -fx-text-alignment: center;
+}
+
+/* ---------- Ventanas emergentes (Dialogs / Alerts) ----------
+   Se muestran sin la barra de titulo del sistema operativo (StageStyle.TRANSPARENT
+   se aplica desde el codigo Java); aca solo se dibuja la "tarjeta" redondeada
+   verde palido con su propio encabezado, para que se vea limpia y consistente. */
+.dialogo-pane {
+    -fx-background-color: linear-gradient(to bottom right, #FFFFFF 0%, #EEF9F2 100%);
+    -fx-background-radius: 22;
+    -fx-border-color: -fx-primary-light;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 22;
+    -fx-effect: dropshadow(gaussian, rgba(31,45,37,0.32), 32, 0, 0, 14);
+    -fx-min-width: 420;
+}
+
+.dialogo-header-panel {
+    -fx-background-color: -fx-primary-light;
+    -fx-background-radius: 22 22 0 0;
+    -fx-padding: 20 30 20 30;
+}
+
+.dialogo-header-panel.dialogo-header-error {
+    -fx-background-color: #FBEAEA;
+}
+
+.dialogo-encabezado {
+    -fx-font-size: 19px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-primary-dark;
+}
+
+.dialogo-header-error .dialogo-encabezado {
+    -fx-text-fill: -fx-danger;
+}
+
+.dialogo-pane .content.label {
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-text-dark;
+    -fx-wrap-text: true;
+    -fx-padding: 22 30 10 30;
+}
+
+.dialogo-pane .button-bar {
+    -fx-background-color: transparent;
+    -fx-padding: 6 26 24 26;
+}
+
+.dialogo-pane .button {
+    -fx-background-color: -fx-primary-light;
+    -fx-text-fill: -fx-primary-dark;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-padding: 9 20 9 20;
+    -fx-cursor: hand;
+}
+.dialogo-pane .button:hover {
+    -fx-background-color: derive(-fx-primary-light, -12%);
+}
+.dialogo-pane .button:default {
+    -fx-background-color: -fx-primary;
+    -fx-text-fill: white;
+}
+.dialogo-pane .button:default:hover {
+    -fx-background-color: -fx-primary-dark;
+}
+
+/* ---------- Secciones / dashboard ---------- */
+.seccion-titulo {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-primary-dark;
+}
+
+.dashboard-fondo {
+    -fx-background-color: #F7FCF9;
+}
+
+.tabla {
+    -fx-background-color: white;
+    -fx-border-color: -fx-primary-light;
+}
+
+.chip-estado {
+    -fx-background-color: -fx-primary-light;
+    -fx-text-fill: -fx-primary-dark;
+    -fx-background-radius: 20;
+    -fx-padding: 4 12 4 12;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
