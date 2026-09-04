@@ -87,11 +87,11 @@ public class MainApp extends Application {
                 estadoRepository, autorizacionService);
         accesoService = new AccesoServiceAuditoriaDecorator(accesoServiceBase, auditoriaRepository);
 
-        personaService = new PersonaService(personaRepository, estadoRepository, autorizacionService, auditoriaRepository);
+        personaService = new PersonaService(personaRepository, estadoRepository, visitaRepository, autorizacionService, auditoriaRepository);
         incidenteService = new IncidenteService(incidenteRepository, visitaRepository, autorizacionService, auditoriaRepository);
         reporteService = new ReporteService(visitaRepository, auditoriaRepository, autorizacionService);
         usuarioService = new UsuarioService(usuarioRepository, rolRepository, autorizacionService, auditoriaRepository);
-        empresaService = new EmpresaService(empresaRepository, autorizacionService, auditoriaRepository);
+        empresaService = new EmpresaService(empresaRepository, personaRepository, autorizacionService, auditoriaRepository);
     }
 
     // ---------------- Navegación ----------------

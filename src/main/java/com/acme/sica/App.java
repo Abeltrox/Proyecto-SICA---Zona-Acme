@@ -43,13 +43,13 @@ public class App {
         AccesoServiceI accesoService = new AccesoServiceAuditoriaDecorator(accesoServiceBase, auditoriaRepository);
 
         PersonaService personaService = new PersonaService(personaRepository, estadoRepository,
-                autorizacionService, auditoriaRepository);
+                visitaRepository, autorizacionService, auditoriaRepository);
         IncidenteService incidenteService = new IncidenteService(incidenteRepository, visitaRepository,
                 autorizacionService, auditoriaRepository);
         ReporteService reporteService = new ReporteService(visitaRepository, auditoriaRepository, autorizacionService);
         UsuarioService usuarioService = new UsuarioService(usuarioRepository, rolRepository,
                 autorizacionService, auditoriaRepository);
-        EmpresaService empresaService = new EmpresaService(empresaRepository, autorizacionService, auditoriaRepository);
+        EmpresaService empresaService = new EmpresaService(empresaRepository, personaRepository, autorizacionService, auditoriaRepository);
 
         // ---- Vista y controladores ----
         ConsolaView view = new ConsolaView();

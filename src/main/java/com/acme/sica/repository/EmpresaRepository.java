@@ -9,4 +9,5 @@ public interface EmpresaRepository {
     List<Empresa> listarTodas();
     Empresa guardar(Empresa empresa);
     void actualizar(Empresa empresa);
+    void eliminar(int id);
 }

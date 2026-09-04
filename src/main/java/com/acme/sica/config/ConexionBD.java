@@ -21,7 +21,7 @@ import java.sql.SQLException;
  */
 public class ConexionBD {
 
-    private static final String URL = obtener("DB_URL", "jdbc:mysql://localhost:3306/sica_db?useSSL=false&serverTimezone=UTC");
+    private static final String URL = obtener("DB_URL", "jdbc:mysql://localhost:3306/sica_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true");
     private static final String USUARIO = obtener("DB_USER", "root");
     private static final String PASSWORD = obtener("DB_PASSWORD", "root");
 

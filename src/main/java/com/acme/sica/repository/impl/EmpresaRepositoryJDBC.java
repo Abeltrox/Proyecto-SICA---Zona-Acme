@@ -68,6 +68,20 @@ public class EmpresaRepositoryJDBC implements EmpresaRepository {
         }
     }
 
+    @Override
+    public void eliminar(int id) {
+        String sql = "DELETE FROM empresas WHERE id=?";
+        try (PreparedStatement ps = ConexionBD.getInstancia().getConexion().prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        } catch (SQLIntegrityConstraintViolationException e) {
+            throw new RuntimeException(
+                    "No se puede eliminar: todavía hay personas o visitas asociadas a esta empresa.", e);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al eliminar empresa", e);
+        }
+    }
+
     private Empresa mapear(ResultSet rs) throws SQLException {
         return new Empresa(rs.getInt("id"), rs.getString("nombre"), rs.getString("contacto_principal"));
     }

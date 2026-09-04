@@ -55,6 +55,41 @@ public final class AdminDialogs {
         dialog.showAndWait();
     }
 
+    /**
+     * "Eliminar" un usuario del sistema en realidad lo desactiva (esta_activo = false): así no puede volver
+     * a iniciar sesión, pero se conserva su historial en bitácora de auditoría, visitas aprobadas, etc.
+     * Solo el Superusuario tiene el permiso 'eliminar_usuario'.
+     */
+    public static void desactivarUsuario(MainApp app) {
+        List<Usuario> activos = app.getUsuarioRepository().listarTodos().stream()
+                .filter(Usuario::isActivo)
+                .toList();
+        if (activos.isEmpty()) {
+            UiUtil.mostrarExito("Desactivar usuario", "No hay usuarios activos en el sistema.");
+            return;
+        }
+
+        Dialog<Void> dialog = DialogoBase.crear("Desactivar usuario del sistema");
+
+        ComboBox<Usuario> usuario = new ComboBox<>();
+        usuario.getItems().addAll(activos);
+        usuario.setPromptText("Selecciona el usuario a desactivar");
+        usuario.setMaxWidth(Double.MAX_VALUE);
+
+        VBox contenido = new VBox(16, UiUtil.campoConEtiqueta("Usuario", usuario));
+        contenido.setPadding(new Insets(24));
+        dialog.getDialogPane().setContent(contenido);
+
+        DialogoBase.agregarBotones(dialog, "Desactivar", () -> {
+            Usuario seleccionado = usuario.getValue();
+            if (seleccionado == null) throw new IllegalArgumentException("Selecciona un usuario de la lista.");
+            app.getUsuarioService().desactivarUsuario(app.getSesionActual(), seleccionado.getId());
+            UiUtil.mostrarExito("Usuario desactivado", seleccionado.getEmail() + " ya no puede iniciar sesión.");
+        });
+
+        dialog.showAndWait();
+    }
+
     public static void registrarEmpresa(MainApp app) {
         Dialog<Void> dialog = DialogoBase.crear("Registrar empresa");
 
@@ -73,6 +108,35 @@ public final class AdminDialogs {
             Empresa empresa = app.getEmpresaService().registrarEmpresa(app.getSesionActual(),
                     nombre.getText().trim(), contacto.getText().trim());
             UiUtil.mostrarExito("Empresa registrada", empresa.toString());
+        });
+
+        dialog.showAndWait();
+    }
+
+    /** Se elige la empresa de un desplegable; el servicio bloquea el borrado si aún tiene personas asociadas. */
+    public static void eliminarEmpresa(MainApp app) {
+        List<Empresa> empresas = app.getEmpresaRepository().listarTodas();
+        if (empresas.isEmpty()) {
+            UiUtil.mostrarExito("Eliminar empresa", "Todavía no hay empresas registradas.");
+            return;
+        }
+
+        Dialog<Void> dialog = DialogoBase.crear("Eliminar empresa");
+
+        ComboBox<Empresa> empresa = new ComboBox<>();
+        empresa.getItems().addAll(empresas);
+        empresa.setPromptText("Selecciona la empresa a eliminar");
+        empresa.setMaxWidth(Double.MAX_VALUE);
+
+        VBox contenido = new VBox(16, UiUtil.campoConEtiqueta("Empresa", empresa));
+        contenido.setPadding(new Insets(24));
+        dialog.getDialogPane().setContent(contenido);
+
+        DialogoBase.agregarBotones(dialog, "Eliminar", () -> {
+            Empresa seleccionada = empresa.getValue();
+            if (seleccionada == null) throw new IllegalArgumentException("Selecciona una empresa de la lista.");
+            app.getEmpresaService().eliminarEmpresa(app.getSesionActual(), seleccionada.getId());
+            UiUtil.mostrarExito("Empresa eliminada", seleccionada.getNombre() + " fue eliminada del sistema.");
         });
 
         dialog.showAndWait();

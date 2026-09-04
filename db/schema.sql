@@ -62,6 +62,7 @@ CREATE TABLE personas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     documento_identidad VARCHAR(20) UNIQUE NOT NULL,
+    correo VARCHAR(150),
     empresa_id INT,
     tipo_persona ENUM('Trabajador', 'Invitado') NOT NULL,
     estado_acceso_id INT,

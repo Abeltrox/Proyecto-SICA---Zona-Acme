@@ -15,6 +15,9 @@ public final class Validaciones {
     /** Cédula: solo dígitos, máximo 10 caracteres. */
     private static final Pattern CEDULA = Pattern.compile("^\\d{1,10}$");
 
+    /** Correo electrónico: formato básico usuario@dominio.tld. */
+    private static final Pattern CORREO = Pattern.compile("^[\\w.+-]+@[\\w-]+\\.[a-zA-Z]{2,}$");
+
     /** Placa de carro: 3 letras + 3 números (ej. GTL251). */
     private static final Pattern PLACA_CARRO = Pattern.compile("^[A-Z]{3}\\d{3}$");
 
@@ -29,6 +32,24 @@ public final class Validaciones {
             throw new IllegalArgumentException(
                     "La cédula debe contener solo números, con un máximo de 10 dígitos.");
         }
+    }
+
+    /**
+     * El correo es opcional (puede venir null o vacío). Si se indica, debe
+     * cumplir un formato básico de correo electrónico.
+     *
+     * @return el correo normalizado (sin espacios de más) o null si no se indicó.
+     * @throws IllegalArgumentException si se indicó un correo con formato inválido.
+     */
+    public static String normalizarYValidarCorreo(String correo) {
+        if (correo == null || correo.isBlank()) return null;
+
+        String normalizado = correo.trim();
+        if (!CORREO.matcher(normalizado).matches()) {
+            throw new IllegalArgumentException(
+                    "Correo inválido. Debe tener el formato usuario@dominio.com.");
+        }
+        return normalizado;
     }
 
     /**

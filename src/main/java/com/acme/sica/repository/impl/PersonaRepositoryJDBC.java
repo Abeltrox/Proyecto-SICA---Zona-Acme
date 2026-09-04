@@ -59,17 +59,18 @@ public class PersonaRepositoryJDBC implements PersonaRepository {
 
     @Override
     public Persona guardar(Persona persona) {
-        String sql = "INSERT INTO personas (nombre, documento_identidad, empresa_id, tipo_persona, estado_acceso_id, url_foto) " +
-                "VALUES (?,?,?,?,?,?)";
+        String sql = "INSERT INTO personas (nombre, documento_identidad, correo, empresa_id, tipo_persona, estado_acceso_id, url_foto) " +
+                "VALUES (?,?,?,?,?,?,?)";
         try (PreparedStatement ps = ConexionBD.getInstancia().getConexion()
                 .prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, persona.getNombre());
             ps.setString(2, persona.getDocumentoIdentidad());
-            if (persona.getEmpresa() != null) ps.setInt(3, persona.getEmpresa().getId());
-            else ps.setNull(3, Types.INTEGER);
-            ps.setString(4, persona.getTipoPersona().name());
-            ps.setInt(5, persona.getEstadoAcceso().getId());
-            ps.setString(6, persona.getUrlFoto());
+            ps.setString(3, persona.getCorreo());
+            if (persona.getEmpresa() != null) ps.setInt(4, persona.getEmpresa().getId());
+            else ps.setNull(4, Types.INTEGER);
+            ps.setString(5, persona.getTipoPersona().name());
+            ps.setInt(6, persona.getEstadoAcceso().getId());
+            ps.setString(7, persona.getUrlFoto());
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) persona.setId(keys.getInt(1));
@@ -82,14 +83,15 @@ public class PersonaRepositoryJDBC implements PersonaRepository {
 
     @Override
     public void actualizar(Persona persona) {
-        String sql = "UPDATE personas SET nombre=?, empresa_id=?, tipo_persona=?, url_foto=? WHERE id=?";
+        String sql = "UPDATE personas SET nombre=?, correo=?, empresa_id=?, tipo_persona=?, url_foto=? WHERE id=?";
         try (PreparedStatement ps = ConexionBD.getInstancia().getConexion().prepareStatement(sql)) {
             ps.setString(1, persona.getNombre());
-            if (persona.getEmpresa() != null) ps.setInt(2, persona.getEmpresa().getId());
-            else ps.setNull(2, Types.INTEGER);
-            ps.setString(3, persona.getTipoPersona().name());
-            ps.setString(4, persona.getUrlFoto());
-            ps.setInt(5, persona.getId());
+            ps.setString(2, persona.getCorreo());
+            if (persona.getEmpresa() != null) ps.setInt(3, persona.getEmpresa().getId());
+            else ps.setNull(3, Types.INTEGER);
+            ps.setString(4, persona.getTipoPersona().name());
+            ps.setString(5, persona.getUrlFoto());
+            ps.setInt(6, persona.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Error al actualizar persona", e);
@@ -108,11 +110,26 @@ public class PersonaRepositoryJDBC implements PersonaRepository {
         }
     }
 
+    @Override
+    public void eliminar(int id) {
+        String sql = "DELETE FROM personas WHERE id=?";
+        try (PreparedStatement ps = ConexionBD.getInstancia().getConexion().prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        } catch (SQLIntegrityConstraintViolationException e) {
+            throw new RuntimeException(
+                    "No se puede eliminar: esta persona todavía tiene visitas registradas en su historial.", e);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al eliminar persona", e);
+        }
+    }
+
     private Persona mapear(ResultSet rs) throws SQLException {
         Persona p = new Persona();
         p.setId(rs.getInt("id"));
         p.setNombre(rs.getString("nombre"));
         p.setDocumentoIdentidad(rs.getString("documento_identidad"));
+        p.setCorreo(rs.getString("correo"));
         int empresaId = rs.getInt("empresa_id");
         if (!rs.wasNull()) {
             p.setEmpresa(empresaRepository.buscarPorId(empresaId).orElse(null));

@@ -107,14 +107,23 @@ public class DashboardView {
         var auth = app.getAutorizacionService();
         List<Tarjeta> tarjetas = new ArrayList<>();
 
-        if (auth.tienePermiso(sesion, "registrar_visita"))
+        if (auth.tienePermiso(sesion, "registrar_visita")) {
             tarjetas.add(new Tarjeta("🚪", "Registrar ingreso", () -> IngresoDialogs.registrarIngreso(app)));
+            tarjetas.add(new Tarjeta("🪪", "Ingreso por carné olvidado", () -> IngresoDialogs.registrarCarnetOlvidado(app)));
+            tarjetas.add(new Tarjeta("🙋", "Ingreso invitado no anunciado", () -> IngresoDialogs.registrarInvitadoNoAnunciado(app)));
+        }
         if (auth.tienePermiso(sesion, "registrar_salida"))
             tarjetas.add(new Tarjeta("🚶", "Registrar salida", () -> IngresoDialogs.registrarSalida(app)));
-        if (auth.tienePermiso(sesion, "aprobar_visita"))
+        if (auth.tienePermiso(sesion, "aprobar_visita")) {
             tarjetas.add(new Tarjeta("✅", "Aprobaciones pendientes", () -> IngresoDialogs.gestionarAprobaciones(app)));
+            tarjetas.add(new Tarjeta("👥", "Aprobaciones pendientes para invitados", () -> IngresoDialogs.gestionarAprobacionesInvitados(app)));
+        }
         if (auth.tienePermiso(sesion, "crear_persona"))
             tarjetas.add(new Tarjeta("🧍", "Registrar persona", () -> PersonaDialogs.registrarPersona(app)));
+        if (auth.tienePermiso(sesion, "editar_persona"))
+            tarjetas.add(new Tarjeta("✏️", "Gestionar persona", () -> PersonaDialogs.gestionarPersona(app)));
+        if (auth.tienePermiso(sesion, "editar_persona"))
+            tarjetas.add(new Tarjeta("🗑️", "Eliminar persona", () -> PersonaDialogs.eliminarPersona(app)));
         if (auth.tienePermiso(sesion, "bloquear_persona")) {
             tarjetas.add(new Tarjeta("🚫", "Bloquear persona", () -> PersonaDialogs.bloquearPersona(app)));
             tarjetas.add(new Tarjeta("🔓", "Reactivar persona", () -> PersonaDialogs.reactivarPersona(app)));
@@ -123,8 +132,12 @@ public class DashboardView {
             tarjetas.add(new Tarjeta("⚠️", "Reportar incidente", () -> AdminDialogs.reportarIncidente(app)));
         if (auth.tienePermiso(sesion, "crear_usuario"))
             tarjetas.add(new Tarjeta("👤", "Crear usuario del sistema", () -> AdminDialogs.crearUsuario(app)));
-        if (auth.tienePermiso(sesion, "gestionar_empresas"))
+        if (auth.tienePermiso(sesion, "eliminar_usuario"))
+            tarjetas.add(new Tarjeta("🔒", "Desactivar usuario del sistema", () -> AdminDialogs.desactivarUsuario(app)));
+        if (auth.tienePermiso(sesion, "gestionar_empresas")) {
             tarjetas.add(new Tarjeta("🏢", "Registrar empresa", () -> AdminDialogs.registrarEmpresa(app)));
+            tarjetas.add(new Tarjeta("🗑️", "Eliminar empresa", () -> AdminDialogs.eliminarEmpresa(app)));
+        }
 
         // Reportes de solo lectura: visibles para cualquier sesión activa.
         tarjetas.add(new Tarjeta("📋", "Personas dentro del complejo", () -> ReporteDialogs.personasDentro(app)));

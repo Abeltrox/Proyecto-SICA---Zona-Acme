@@ -11,4 +11,5 @@ public interface PersonaRepository {
     Persona guardar(Persona persona);
     void actualizar(Persona persona);
     void actualizarEstadoAcceso(int personaId, int estadoAccesoId);
+    void eliminar(int id);
 }

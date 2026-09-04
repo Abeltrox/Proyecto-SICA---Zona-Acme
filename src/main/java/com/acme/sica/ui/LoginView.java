@@ -75,9 +75,12 @@ public class LoginView {
         } catch (AccesoDenegadoException e) {
             mensajeError.setText(e.getMessage());
             mensajeError.setVisible(true);
-        } catch (RuntimeException e) {
-            mensajeError.setText("Error de conexión con la base de datos: " + e.getMessage());
-            mensajeError.setVisible(true);
+        } catch (RuntimeException e) 
+        { e.printStackTrace(); if (e.getCause() != null) 
+            { System.out.println("CAUSA REAL: " + e.getCause().getMessage()); 
+
+            } mensajeError.setText("Error de conexión con la base de datos: " + e.getMessage()); 
+            mensajeError.setVisible(true); 
         }
     }
 }

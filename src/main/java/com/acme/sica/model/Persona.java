@@ -6,6 +6,7 @@ public class Persona {
     private int id;
     private String nombre;
     private String documentoIdentidad;
+    private String correo;
     private Empresa empresa;
     private TipoPersona tipoPersona;
     private EstadoAcceso estadoAcceso;
@@ -35,6 +36,8 @@ public class Persona {
     public void setNombre(String nombre) { this.nombre = nombre; }
     public String getDocumentoIdentidad() { return documentoIdentidad; }
     public void setDocumentoIdentidad(String documentoIdentidad) { this.documentoIdentidad = documentoIdentidad; }
+    public String getCorreo() { return correo; }
+    public void setCorreo(String correo) { this.correo = correo; }
     public Empresa getEmpresa() { return empresa; }
     public void setEmpresa(Empresa empresa) { this.empresa = empresa; }
     public TipoPersona getTipoPersona() { return tipoPersona; }
