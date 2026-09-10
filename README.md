@@ -285,7 +285,384 @@ Todas las contraseñas de ejemplo son: **`Acme#2026`**
 4. Revisa "Bitácora de auditoría" (rol Superusuario o Supervisor) para ver
    cómo cada acción anterior quedó registrada automáticamente.
 
-## 8. Solución de problemas comunes
+## 8. Para el examen — cómo crear una nueva funcionalidad, paso a paso
+
+Guía genérica para cuando en el examen te pidan agregar "lo que sea" al
+proyecto. Sirve tanto si es un CRUD nuevo, un reporte, un botón extra en el
+dashboard, o una regla de negocio. La idea: **siempre atraviesas las mismas
+capas, en el mismo orden**, porque la arquitectura es MVC + capas (ver
+sección 3). Nunca saltes una capa (por ejemplo, nunca llames JDBC desde un
+diálogo de `ui/`).
+
+### 8.1 Ubica en qué capa vive lo que te piden
+
+| Si te piden... | Empieza en... |
+|---|---|
+| Un dato nuevo (columna, tabla) | `db/schema.sql` (y `data.sql` si necesita semilla) |
+| Una regla de negocio / validación | `service/` (o `util/Validaciones.java` si es una validación de formato) |
+| Una consulta nueva a la BD | `repository/` (interfaz) + `repository/impl/` (JDBC) |
+| Un botón o pantalla nueva | `ui/dialogs/` + registrar el botón en `ui/DashboardView.java` |
+| Un permiso nuevo (quién puede usar la funcionalidad) | tabla `permisos` / `rol_permisos` en la BD |
+
+### 8.2 Flujo paso a paso (de abajo hacia arriba)
+
+**Paso 1 — Base de datos (si aplica).** Si tu funcionalidad necesita guardar
+algo nuevo, agrega la columna/tabla en `db/schema.sql`. Ejemplo: agregar un
+campo `telefono` a `personas`:
+```sql
+ALTER TABLE personas ADD COLUMN telefono VARCHAR(20) NULL;
+```
+
+**Paso 2 — Modelo (`model/`).** Agrega el campo/entidad con su getter y
+setter. Ejemplo en `Persona.java`:
+```java
+private String telefono;
+public String getTelefono() { return telefono; }
+public void setTelefono(String telefono) { this.telefono = telefono; }
+```
+
+**Paso 3 — Repositorio: interfaz + implementación JDBC.** Primero declaras
+el método en la interfaz (el "puerto"), luego lo implementas en `impl/` (el
+"adaptador"). Ejemplo: agregar un método para contar visitas por empresa en
+`repository/VisitaRepository.java`:
+```java
+/** Cuenta cuántas visitas registradas tiene una empresa (para un reporte). */
+int contarVisitasPorEmpresa(int empresaId);
+```
+Y en `repository/impl/VisitaRepositoryJDBC.java`:
+```java
+@Override
+public int contarVisitasPorEmpresa(int empresaId) {
+    String sql = "SELECT COUNT(*) FROM visitas v JOIN personas p ON v.persona_id = p.id " +
+            "WHERE p.empresa_id = ?";
+    try (PreparedStatement ps = ConexionBD.getInstancia().getConexion().prepareStatement(sql)) {
+        ps.setInt(1, empresaId);
+        try (ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : 0;
+        }
+    } catch (SQLException e) {
+        throw new RuntimeException("Error al contar visitas por empresa", e);
+    }
+}
+```
+*Tip:* si agregas un método a la interfaz, revisa si hay más de una clase
+`implements` esa interfaz — todas deben implementarlo o no compila.
+
+**Paso 4 — Servicio (`service/`): la regla de negocio y el RBAC.** Aquí va
+la lógica real: validaciones, permisos, y quién puede hacer qué. Ejemplo en
+`service/ReporteService.java`:
+```java
+public int reporteVisitasPorEmpresa(Usuario operador, int empresaId) {
+    AutorizacionService.verificarPermiso(operador, "ver_reportes"); // RBAC
+    return visitaRepository.contarVisitasPorEmpresa(empresaId);
+}
+```
+Si tu funcionalidad debe quedar en la bitácora de auditoría, revisa
+`decorator/AccesoServiceAuditoriaDecorator.java` como ejemplo de cómo se
+envuelve un servicio para loguear la acción automáticamente.
+
+**Paso 5 — Interfaz gráfica (`ui/dialogs/`).** Crea (o reutiliza) un diálogo
+que llame al servicio del paso 4 — nunca al repositorio directamente.
+Ejemplo mínimo de diálogo, siguiendo el patrón de los que ya existen:
+```java
+public static void verVisitasPorEmpresa(MainApp app) {
+    List<Empresa> empresas = app.getEmpresaRepository().listarTodas();
+    ComboBox<Empresa> combo = new ComboBox<>();
+    combo.getItems().addAll(empresas);
+    combo.setPromptText("Selecciona una empresa");
+
+    Dialog<Void> dialog = DialogoBase.crear("Visitas por empresa");
+    VBox contenido = new VBox(16, UiUtil.campoConEtiqueta("Empresa", combo));
+    contenido.setPadding(new Insets(24));
+    dialog.getDialogPane().setContent(contenido);
+
+    DialogoBase.agregarBotones(dialog, "Consultar", () -> {
+        Empresa e = combo.getValue();
+        if (e == null) throw new IllegalArgumentException("Selecciona una empresa.");
+        int total = app.getReporteService().reporteVisitasPorEmpresa(app.getSesionActual(), e.getId());
+        UiUtil.mostrarExito("Resultado", "Total de visitas: " + total);
+    });
+    dialog.showAndWait();
+}
+```
+
+**Paso 6 — Registrar el botón en el dashboard.** En
+`ui/DashboardView.java`, agrega la tarjeta/botón, condicionada al permiso
+RBAC correspondiente (así respetas el patrón que ya usa todo el proyecto):
+```java
+if (app.getSesionActual().tienePermiso("ver_reportes")) {
+    tarjetas.add(UiUtil.crearTarjeta("Visitas por empresa", "📊",
+            () -> IngresoDialogs.verVisitasPorEmpresa(app))); // o el dialog que corresponda
+}
+```
+
+**Paso 7 — Permisos (si es funcionalidad nueva de rol).** Si el permiso no
+existe todavía, agrégalo en `db/data.sql`:
+```sql
+INSERT INTO permisos (nombre_permiso, descripcion) VALUES ('ver_reportes', 'Puede ver reportes');
+INSERT INTO rol_permisos (rol_id, permiso_id) SELECT r.id, p.id FROM roles r, permisos p
+    WHERE r.nombre_rol = 'Supervisor de Seguridad' AND p.nombre_permiso = 'ver_reportes';
+```
+
+**Paso 8 — Compilar y probar.**
+```bash
+mvn clean compile
+mvn clean javafx:run
+```
+
+### 8.3 Checklist mental para el examen
+
+1. ¿Qué dato necesito? → ¿toca la BD? (`schema.sql`/`data.sql`)
+2. ¿Qué entidad lo representa? → `model/`
+3. ¿Cómo lo leo/guardo? → `repository/` (interfaz) → `repository/impl/` (JDBC)
+4. ¿Qué regla de negocio o permiso aplica? → `service/`
+5. ¿Cómo lo ve el usuario? → `ui/dialogs/` + botón en `ui/DashboardView.java`
+6. ¿Compila y corre? → `mvn clean javafx:run`
+
+Si el examen pide explícitamente un patrón de diseño para la nueva
+funcionalidad, revisa cuál de los 5 ya usados encaja (Strategy si es "un
+escenario más" como los flujos de ingreso, Observer si es "algo debe
+notificarse en tiempo real", Decorator si es "una capa extra sobre un
+servicio existente sin tocarlo").
+
+### 8.4 Más ejemplos de funcionalidades completas
+
+#### Ejemplo A — CRUD nuevo: "Registrar visitante VIP" (nueva tabla)
+
+**1. `db/schema.sql`:**
+```sql
+CREATE TABLE visitantes_vip (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    persona_id INT NOT NULL,
+    motivo VARCHAR(200),
+    registrado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (persona_id) REFERENCES personas(id)
+);
+```
+
+**2. `model/VisitanteVip.java`:**
+```java
+public class VisitanteVip {
+    private int id;
+    private Persona persona;
+    private String motivo;
+    private LocalDateTime registradoEn;
+    // getters y setters
+}
+```
+
+**3. `repository/VisitanteVipRepository.java` + `impl/VisitanteVipRepositoryJDBC.java`:**
+```java
+public interface VisitanteVipRepository {
+    VisitanteVip guardar(VisitanteVip vip);
+    List<VisitanteVip> listarTodos();
+}
+```
+```java
+@Override
+public VisitanteVip guardar(VisitanteVip vip) {
+    String sql = "INSERT INTO visitantes_vip (persona_id, motivo) VALUES (?,?)";
+    try (PreparedStatement ps = ConexionBD.getInstancia().getConexion()
+            .prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        ps.setInt(1, vip.getPersona().getId());
+        ps.setString(2, vip.getMotivo());
+        ps.executeUpdate();
+        try (ResultSet keys = ps.getGeneratedKeys()) {
+            if (keys.next()) vip.setId(keys.getInt(1));
+        }
+    } catch (SQLException e) {
+        throw new RuntimeException("Error al guardar visitante VIP", e);
+    }
+    return vip;
+}
+```
+
+**4. `service/VisitanteVipService.java` (RBAC + regla de negocio):**
+```java
+public VisitanteVip registrarVip(Usuario operador, int personaId, String motivo) {
+    AutorizacionService.verificarPermiso(operador, "registrar_persona");
+    Persona persona = personaRepository.buscarPorId(personaId)
+            .orElseThrow(() -> new IllegalArgumentException("Persona no encontrada"));
+    VisitanteVip vip = new VisitanteVip();
+    vip.setPersona(persona);
+    vip.setMotivo(motivo);
+    return visitanteVipRepository.guardar(vip);
+}
+```
+
+**5. `ui/dialogs/VisitanteVipDialogs.java`** (mismo patrón que `PersonaDialogs`: `ComboBox<Persona>` + `TextField` + `DialogoBase.agregarBotones`).
+
+#### Ejemplo B — Regla de negocio nueva sobre algo existente: "Límite de invitados simultáneos por empresa"
+
+Si te piden agregar una restricción sin crear tablas nuevas, casi siempre va
+completa en `service/`, reutilizando repositorios que ya existen:
+```java
+// en AccesoService, antes de crear la visita
+public Visita registrarIngreso(String documento, Usuario operador, String placa) {
+    Persona persona = personaRepository.buscarPorDocumento(documento)
+            .orElseThrow(() -> new IllegalArgumentException("Persona no registrada"));
+
+    if (persona.getTipoPersona() == TipoPersona.Invitado && persona.getEmpresa() != null) {
+        long dentroActualmente = visitaRepository.listarTodas().stream()
+                .filter(Visita::estaAbierta)
+                .filter(v -> v.getPersona().getEmpresa() != null
+                        && v.getPersona().getEmpresa().getId() == persona.getEmpresa().getId())
+                .filter(v -> v.getPersona().getTipoPersona() == TipoPersona.Invitado)
+                .count();
+        if (dentroActualmente >= 5) {
+            throw new IllegalStateException("La empresa ya tiene el máximo de invitados permitidos dentro (5).");
+        }
+    }
+    // ... resto del flujo normal
+}
+```
+Esto ya es un ejemplo de Stream API (ver 8.5) resolviendo una regla de
+negocio sin tocar la base de datos.
+
+#### Ejemplo C — Reporte nuevo con `groupingBy` (reutilizando `ReporteService`)
+
+```java
+// service/ReporteService.java
+public Map<String, Long> reporteIncidentesPorMes(Usuario operador) {
+    AutorizacionService.verificarPermiso(operador, "ver_reportes");
+    return incidenteRepository.listarTodos().stream()
+            .collect(Collectors.groupingBy(
+                    i -> i.getFecha().getMonth().toString(),
+                    Collectors.counting()));
+}
+```
+
+### 8.5 Lambdas y Stream API — ejemplos listos para adaptar
+
+El proyecto ya usa esto en `ReporteService` y `GestorNotificaciones`; si te
+piden "usar lambdas" en tu funcionalidad nueva, estos son los patrones más
+comunes que puedes reutilizar:
+
+```java
+// 1) Filtrar + contar (Predicate + count)
+long trabajadoresActivos = personaRepository.listarTodas().stream()
+        .filter(p -> p.getTipoPersona() == TipoPersona.Trabajador)
+        .filter(Persona::puedeIngresar)
+        .count();
+
+// 2) Filtrar + transformar + ordenar (filter + map + sorted)
+List<String> nombresDentro = visitaRepository.listarTodas().stream()
+        .filter(Visita::estaAbierta)
+        .map(v -> v.getPersona().getNombre())
+        .sorted()
+        .toList();
+
+// 3) Agrupar y contar (groupingBy + counting) — ideal para reportes
+Map<TipoPersona, Long> conteoPorTipo = personaRepository.listarTodas().stream()
+        .collect(Collectors.groupingBy(Persona::getTipoPersona, Collectors.counting()));
+
+// 4) forEach con lambda (en vez de for tradicional) — ej. notificar observadores
+observadores.forEach(obs -> obs.notificar(visita));
+
+// 5) Comparator con lambda / method reference — ordenar visitas por fecha
+List<Visita> ordenadas = visitaRepository.listarTodas().stream()
+        .sorted(Comparator.comparing(Visita::getFechaEntrada).reversed())
+        .toList();
+
+// 6) Optional + lambda (evitar null checks manuales)
+personaRepository.buscarPorDocumento(documento)
+        .ifPresentOrElse(
+                p -> System.out.println("Encontrada: " + p.getNombre()),
+                () -> System.out.println("No existe esa persona"));
+
+// 7) reduce — ej. sumar algo (si tuvieras un campo numérico)
+int totalIncidentes = empresas.stream()
+        .mapToInt(e -> incidenteRepository.contarPorEmpresa(e.getId()))
+        .sum();
+```
+
+*Tip para el examen:* si el profesor pregunta "¿por qué usaste Stream en vez
+de un for?", la respuesta corta es: es más declarativo (dices *qué* quieres,
+no *cómo* iterarlo), evita variables mutables y encadena
+filtrado/transformación/agregación en una sola expresión.
+
+### 8.6 Hilos (threads) — cómo agregarlos sin romper la UI de JavaFX
+
+**Regla de oro de JavaFX: nunca bloquees el hilo de la interfaz (el
+"JavaFX Application Thread").** Si una operación puede tardar (una consulta
+pesada, un reporte grande, simular un proceso lento), debe correr en un
+hilo aparte, y solo se actualiza la UI de vuelta en el hilo de JavaFX.
+
+#### Opción recomendada en JavaFX: `javafx.concurrent.Task`
+
+```java
+public static void generarReportePesado(MainApp app) {
+    Dialog<Void> dialog = DialogoBase.crear("Generando reporte");
+    Label estado = new Label("Procesando, por favor espera...");
+    ProgressIndicator progreso = new ProgressIndicator();
+    VBox contenido = new VBox(16, estado, progreso);
+    contenido.setPadding(new Insets(24));
+    dialog.getDialogPane().setContent(contenido);
+    dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+    dialog.show(); // no bloqueante
+
+    Task<Map<String, Long>> tarea = new Task<>() {
+        @Override
+        protected Map<String, Long> call() {
+            // esto corre en un hilo aparte, NO en el hilo de JavaFX
+            return app.getReporteService().reporteIncidentesPorMes(app.getSesionActual());
+        }
+    };
+
+    tarea.setOnSucceeded(e -> {
+        // esto sí vuelve automáticamente al hilo de JavaFX
+        Map<String, Long> resultado = tarea.getValue();
+        dialog.setResult(null);
+        dialog.close();
+        UiUtil.mostrarExito("Reporte listo", resultado.toString());
+    });
+
+    tarea.setOnFailed(e -> {
+        dialog.close();
+        UiUtil.mostrarError("No se pudo generar el reporte: " + tarea.getException().getMessage());
+    });
+
+    new Thread(tarea).start();
+}
+```
+
+#### Opción más simple (hilo plano con `Runnable` + `Platform.runLater`)
+
+Útil si el profesor pide explícitamente "usa `Thread`" en vez de `Task`:
+```java
+public static void procesarEnSegundoPlano(MainApp app, Runnable trabajoPesado, Runnable alTerminar) {
+    Thread hilo = new Thread(() -> {
+        trabajoPesado.run(); // trabajo lento, fuera del hilo de JavaFX
+        Platform.runLater(alTerminar); // vuelve al hilo de JavaFX para tocar la UI
+    });
+    hilo.setDaemon(true); // no bloquea el cierre de la app
+    hilo.start();
+}
+```
+
+#### Si te piden hilos en la versión de consola (sin JavaFX)
+
+Ahí no hay restricción de "hilo de UI", así que un `ExecutorService` normal
+funciona (útil para, por ejemplo, procesar varios incidentes en paralelo):
+```java
+ExecutorService pool = Executors.newFixedThreadPool(4);
+List<Future<String>> resultados = incidentes.stream()
+        .map(inc -> pool.submit(() -> procesarIncidente(inc)))
+        .toList();
+
+for (Future<String> f : resultados) {
+    System.out.println(f.get()); // espera y obtiene el resultado de cada hilo
+}
+pool.shutdown();
+```
+
+*Tip para el examen:* si preguntan "¿por qué no usaste hilos para todo?",
+la respuesta es que la mayoría de operaciones de SICA son rápidas (una
+consulta JDBC puntual), y crear hilos innecesarios agrega complejidad
+(sincronización, condiciones de carrera) sin beneficio real — los hilos se
+justifican solo cuando hay trabajo pesado o que puede demorar.
+
+## 9. Solución de problemas comunes
 
 | Síntoma | Causa habitual | Solución |
 |---|---|---|

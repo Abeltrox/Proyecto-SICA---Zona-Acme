@@ -106,6 +106,22 @@ public class VisitaRepositoryJDBC implements VisitaRepository {
     }
 
     @Override
+    public List<Visita> listarPendientesSinEmpresa() {
+        List<Visita> visitas = new ArrayList<>();
+        String sql = "SELECT v.* FROM visitas v " +
+                "JOIN personas p ON v.persona_id = p.id " +
+                "JOIN visita_estados e ON v.estado_visita_id = e.id " +
+                "WHERE p.empresa_id IS NULL AND e.nombre_estado = 'Pendiente de Aprobacion'";
+        try (PreparedStatement ps = ConexionBD.getInstancia().getConexion().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) visitas.add(mapear(rs));
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al listar visitas pendientes sin empresa", e);
+        }
+        return visitas;
+    }
+
+    @Override
     public List<Visita> listarTodas() {
         List<Visita> visitas = new ArrayList<>();
         String sql = "SELECT * FROM visitas ORDER BY fecha_entrada DESC";

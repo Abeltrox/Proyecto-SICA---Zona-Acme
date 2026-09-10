@@ -165,14 +165,14 @@ public final class IngresoDialogs {
         gestionarAprobaciones(app, true);
     }
 
+    /** Opción sentinela para el combo: representa "invitados sin empresa" (persona.empresa_id IS NULL). */
+    private static final Empresa SIN_EMPRESA = new Empresa(-1, "— Sin empresa (invitados) —", null);
+
     private static void gestionarAprobaciones(MainApp app, boolean soloInvitados) {
         List<Empresa> empresas = app.getEmpresaRepository().listarTodas();
-        if (empresas.isEmpty()) {
-            UiUtil.mostrarExito("Sin empresas", "Todavía no hay empresas registradas en el sistema.");
-            return;
-        }
 
         ComboBox<Empresa> empresaCombo = new ComboBox<>();
+        empresaCombo.getItems().add(SIN_EMPRESA);
         empresaCombo.getItems().addAll(empresas);
         empresaCombo.setPromptText("Selecciona una empresa");
         empresaCombo.setMaxWidth(Double.MAX_VALUE);
@@ -188,7 +188,10 @@ public final class IngresoDialogs {
         Optional<Empresa> empresaElegida = seleccion.showAndWait();
         if (empresaElegida.isEmpty()) return;
 
-        List<Visita> pendientes = app.getVisitaRepository().listarPendientesPorFuncionario(empresaElegida.get().getId());
+        boolean esSinEmpresa = empresaElegida.get() == SIN_EMPRESA;
+        List<Visita> pendientes = esSinEmpresa
+                ? app.getVisitaRepository().listarPendientesSinEmpresa()
+                : app.getVisitaRepository().listarPendientesPorFuncionario(empresaElegida.get().getId());
         if (soloInvitados) {
             pendientes = pendientes.stream()
                     .filter(v -> v.getPersona().getTipoPersona() == TipoPersona.Invitado)

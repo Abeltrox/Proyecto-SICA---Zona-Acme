@@ -12,8 +12,8 @@ import java.util.regex.Pattern;
  */
 public final class Validaciones {
 
-    /** Cédula: solo dígitos, máximo 10 caracteres. */
-    private static final Pattern CEDULA = Pattern.compile("^\\d{1,10}$");
+    /** Cédula: exactamente 10 dígitos numéricos. */
+    private static final Pattern CEDULA = Pattern.compile("^\\d{10}$");
 
     /** Correo electrónico: formato básico usuario@dominio.tld. */
     private static final Pattern CORREO = Pattern.compile("^[\\w.+-]+@[\\w-]+\\.[a-zA-Z]{2,}$");
@@ -26,11 +26,11 @@ public final class Validaciones {
 
     private Validaciones() {}
 
-    /** @throws IllegalArgumentException si la cédula no es numérica o supera los 10 dígitos. */
+    /** @throws IllegalArgumentException si la cédula no tiene exactamente 10 dígitos numéricos. */
     public static void validarCedula(String documento) {
         if (documento == null || !CEDULA.matcher(documento.trim()).matches()) {
             throw new IllegalArgumentException(
-                    "La cédula debe contener solo números, con un máximo de 10 dígitos.");
+                    "La cédula debe contener exactamente 10 dígitos numéricos.");
         }
     }
 

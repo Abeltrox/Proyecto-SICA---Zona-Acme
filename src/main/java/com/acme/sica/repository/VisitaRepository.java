@@ -11,6 +11,8 @@ public interface VisitaRepository {
     /** Busca la última visita de una persona cuyo estado sea "Dentro" (para detectar salida olvidada). */
     Optional<Visita> buscarVisitaAbiertaDePersona(int personaId);
     List<Visita> listarPendientesPorFuncionario(int empresaId);
+    /** Pendientes de invitados que no pertenecen a ninguna empresa (persona.empresa_id IS NULL). */
+    List<Visita> listarPendientesSinEmpresa();
     List<Visita> listarTodas();
     List<Visita> listarPorPersona(int personaId);
 }
