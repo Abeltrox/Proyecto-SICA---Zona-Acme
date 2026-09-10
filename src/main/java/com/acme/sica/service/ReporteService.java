@@ -38,6 +38,17 @@ public class ReporteService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Personal (trabajadores e invitados) de la empresa del Funcionario que ha iniciado sesión
+     * y que actualmente están "Dentro" del complejo. Requiere el permiso 'ver_personal_presente'.
+     */
+    public List<Visita> personalPresenteDeEmpresa(Usuario funcionario, int empresaId) {
+        autorizacionService.verificarPermiso(funcionario, "ver_personal_presente");
+        return visitaRepository.listarDentroPorEmpresa(empresaId).stream()
+                .sorted(Comparator.comparing(v -> v.getPersona().getNombre()))
+                .collect(Collectors.toList());
+    }
+
     /** Cuenta cuántas visitas hay agrupadas por estado (Dentro, Fuera, Pendiente, etc.). */
     public Map<String, Long> conteoVisitasPorEstado() {
         return visitaRepository.listarTodas().stream()

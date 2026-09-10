@@ -89,6 +89,13 @@ public class App {
                 case 11 -> reporteController.mostrarConteoPorEstado();
                 case 12 -> reporteController.mostrarConteoPorEmpresa();
                 case 13 -> reporteController.mostrarBitacora(sesion);
+                case 14 -> {
+                    if (esFuncionarioDeEmpresa(sesion)) {
+                        reporteController.mostrarPersonalPresente(sesion);
+                    } else {
+                        view.mostrarError("Opción no válida.");
+                    }
+                }
                 case 0 -> salir = true;
                 default -> view.mostrarError("Opción no válida.");
             }
@@ -113,6 +120,14 @@ public class App {
         view.mostrar("11. Reporte: conteo de visitas por estado");
         view.mostrar("12. Reporte: conteo de visitas por empresa");
         view.mostrar("13. Ver bitácora de auditoría");
+        if (esFuncionarioDeEmpresa(sesion)) {
+            view.mostrar("14. Ver Personal Presente en el Complejo");
+        }
         view.mostrar(" 0. Salir");
+    }
+
+    /** La opción "Ver Personal Presente en el Complejo" es exclusiva del rol Funcionario de Empresa. */
+    private static boolean esFuncionarioDeEmpresa(Usuario sesion) {
+        return sesion.getRol() != null && "Funcionario de Empresa".equalsIgnoreCase(sesion.getRol().getNombreRol());
     }
 }

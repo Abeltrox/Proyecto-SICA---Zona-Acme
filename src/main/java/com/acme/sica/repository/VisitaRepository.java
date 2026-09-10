@@ -13,6 +13,8 @@ public interface VisitaRepository {
     List<Visita> listarPendientesPorFuncionario(int empresaId);
     /** Pendientes de invitados que no pertenecen a ninguna empresa (persona.empresa_id IS NULL). */
     List<Visita> listarPendientesSinEmpresa();
+    /** Personas (trabajadores o invitados) de una empresa cuya visita está actualmente "Dentro". */
+    List<Visita> listarDentroPorEmpresa(int empresaId);
     List<Visita> listarTodas();
     List<Visita> listarPorPersona(int personaId);
 }

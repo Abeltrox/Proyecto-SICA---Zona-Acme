@@ -23,7 +23,8 @@ INSERT INTO permisos (nombre_permiso, descripcion) VALUES
 ('bloquear_persona', 'Cambiar el estado de acceso de una persona a bloqueado'),
 ('registrar_incidente', 'Reportar un incidente de seguridad'),
 ('generar_reporte_auditoria', 'Consultar la bitácora de auditoría'),
-('gestionar_empresas', 'Crear/editar empresas registradas en el complejo');
+('gestionar_empresas', 'Crear/editar empresas registradas en el complejo'),
+('ver_personal_presente', 'Ver el personal de la propia empresa actualmente dentro del complejo');
 
 -- ---------- ROL_PERMISOS ----------
 -- Superusuario (id 1): todos los permisos
@@ -41,9 +42,10 @@ SELECT 3, id FROM permisos WHERE nombre_permiso IN
 ('registrar_visita','registrar_salida','crear_persona','registrar_incidente');
 
 -- Funcionario de Empresa (id 4): aprobar visitas de su empresa + registrar invitados propios
+-- + consultar el personal de su empresa actualmente presente en el complejo
 INSERT INTO rol_permisos (rol_id, permiso_id)
 SELECT 4, id FROM permisos WHERE nombre_permiso IN
-('aprobar_visita','crear_persona','editar_persona');
+('aprobar_visita','crear_persona','editar_persona','ver_personal_presente');
 
 -- ---------- USUARIOS DE EJEMPLO (una credencial por rol) ----------
 -- NOTA: en este proyecto académico la contraseña se guarda con SHA-256 simple
