@@ -671,3 +671,79 @@ justifican solo cuando hay trabajo pesado o que puede demorar.
 | `Access denied for user` al conectar a MySQL | Las credenciales por defecto (`root`/`root`) no coinciden con tu MySQL | Definí las variables de entorno `DB_USER`/`DB_PASSWORD` con tus credenciales reales antes de ejecutar (ver sección 6, paso 2) |
 | `Communications link failure` / `Connection refused` | MySQL no está corriendo, o el puerto no es el 3306 | Verifica con `docker compose ps` (si usas Docker) o que el servicio MySQL local esté activo |
 | `Unknown database 'sica_db'` | El esquema tiene otro nombre en tu MySQL | Definí la variable de entorno `DB_URL` apuntando al nombre correcto, o creá el esquema como `sica_db` |
+
+## 10. Comandos Git para subir los cambios
+ 
+El proyecto sigue **Git Flow** con mensajes de commit en formato
+**Conventional Commits** (`tipo(alcance): descripción`).
+ 
+### Flujo normal de trabajo (rama de feature)
+ 
+```bash
+# 1. Asegurate de estar actualizado con develop antes de empezar
+git checkout develop
+git pull origin develop
+ 
+# 2. Crear una rama de feature para tu cambio
+git checkout -b feature/nombre-del-cambio
+ 
+# 3. Ver el estado de los archivos modificados
+git status
+ 
+# 4. Agregar los cambios (todo, o archivo por archivo)
+git add .
+# o de forma selectiva:
+# git add src/main/java/com/acme/sica/service/AccesoService.java
+ 
+# 5. Commit con Conventional Commits
+git commit -m "feat(acceso): agregar límite de invitados por empresa"
+# otros tipos comunes: fix, docs, refactor, test, chore
+ 
+# 6. Subir la rama al repositorio remoto
+git push origin feature/nombre-del-cambio
+```
+ 
+### Tipos de commit más usados en Conventional Commits
+ 
+| Tipo | Uso |
+|---|---|
+| `feat` | Nueva funcionalidad |
+| `fix` | Corrección de un bug |
+| `docs` | Cambios solo en documentación (README, comentarios) |
+| `refactor` | Cambio de código que no agrega funcionalidad ni corrige bugs |
+| `test` | Agregar o corregir pruebas |
+| `chore` | Tareas de mantenimiento (dependencias, configuración) |
+ 
+### Fusionar la feature a develop (Git Flow)
+ 
+```bash
+# 1. Actualizar develop localmente
+git checkout develop
+git pull origin develop
+ 
+# 2. Traer los últimos cambios de develop a tu rama (evita conflictos al fusionar)
+git checkout feature/nombre-del-cambio
+git merge develop
+ 
+# 3. Volver a develop y fusionar la feature
+git checkout develop
+git merge --no-ff feature/nombre-del-cambio -m "merge: integrar feature/nombre-del-cambio"
+ 
+# 4. Subir develop actualizado
+git push origin develop
+ 
+# 5. (Opcional) borrar la rama de feature ya fusionada
+git branch -d feature/nombre-del-cambio
+git push origin --delete feature/nombre-del-cambio
+```
+ 
+### Comandos sueltos que se usan seguido
+ 
+```bash
+git log --oneline -10        # ver los últimos 10 commits
+git diff                     # ver cambios sin agregar aún (unstaged)
+git diff --staged            # ver cambios ya agregados con git add
+git stash                    # guardar cambios sin commitear temporalmente
+git stash pop                # recuperar esos cambios guardados
+git branch -a                # listar todas las ramas (locales y remotas)
+```
